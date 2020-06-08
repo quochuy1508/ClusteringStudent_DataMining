@@ -1,8 +1,6 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
-import static java.util.stream.Collectors.toSet;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,76 +9,73 @@ public class LastFm {
     private static ObjectMapper mapper = new ObjectMapper();
     public static void main(String[] args) throws IOException {
         List<Record> records = getDataset();;
-//        ListIterator<Record> iterator = records.listIterator();
-//        System.out.println("\nUsing ListIterator:\n");
-//        while (iterator.hasNext()) {
-//            System.out.println("Value is : "
-//                    + iterator.next());
-//        }
-
-//        List<Record> records = // the dataset;
-                Distance distance = new EuclideanDistance();
+        System.out.println("ALL COUNT RECORD: " + records.size());
+        Distance distance = new EuclideanDistance();
         List<Double> sumOfSquaredErrors = new ArrayList<>();
-        for (int k = 2; k <= 16; k++) {
+        double max = Double.MAX_VALUE;
+        for (int k = 2; k <= 7; k++) {
             System.out.println("------------------------------ CLUSTER " + k + " -----------------------------------");
-            Map<Centroid, List<Record>> clusters = KMeans.fit(records, k, distance, 1000);
-            clusters.forEach((key, value) -> {
-            System.out.println("------------------------------ ok -----------------------------------");
-            System.out.println(sortedCentroid(key));
-            String members = String.join(", ", value
-                    .stream()
-                    .map(Record::getDescription)
-                    .collect(toSet()));
-            System.out.print(members);
-            System.out.println();
-            System.out.println();
-        });
-            double sse = Errors.sse(clusters, distance);
-            sumOfSquaredErrors.add(sse);
-        }
-        ListIterator<Double> iterator = sumOfSquaredErrors.listIterator();
-        System.out.println("\nUsing ListIterator:\n");
-        while (iterator.hasNext()) {
-            System.out.println("Value is : "
-                    + iterator.next());
-        }
+            int finalK = k;
+            double avgMin = Double.MAX_VALUE;
+            for (int i = 0; i < 50; i++) { // chay 50 lan voi tung k de chay toi uu
+                Map<Centroid, List<Record>> clusters = KMeans.fit(records, k, distance, 1000);
+                StringBuffer temp = new StringBuffer("");
+                final double[] avg = {0.0};
+                if (clusters.size() != finalK) {
+                    i--;
+                    continue;
+                }
+                clusters.forEach((key, value) -> {
 
-//        Distance distance = new EuclideanDistance();
-//        List<Double> sumOfSquaredErrors = new ArrayList<>();
-//        for (int k = 2; k <= 16; k++) {
-//            Map<Centroid, List<Record>> clusters = KMeans.fit(records, k, distance, 1000);
-//            Double sse = Errors.sse(clusters, distance);
-//            sumOfSquaredErrors.add(sse);
-//        }
-//        Map<Centroid, List<Record>> clusters = KMeans.fit(records, 3, new EuclideanDistance(), 1000);
-//        clusters.forEach((key, value) -> {
-//            System.out.println("------------------------------ CLUSTER -----------------------------------");
-//
-//            System.out.println(sortedCentroid(key));
-//            String members = String.join(", ", value
-//                    .stream()
-//                    .map(Record::getDescription)
-//                    .collect(toSet()));
-//            System.out.print(members);
-//            System.out.println();
-//            System.out.println();
-//        });
 
-//        Map<String, Object> json = convertToD3CompatibleMap(clusters);
-//        System.out.println(mapper.writeValueAsString(json));
+//                    System.out.println("key: " + key);
+//                    temp[0] += "\n======================================================================\n";
+//                    temp[0] += "Centroid: " + key.toString() +"\n";
+//                    temp[0] += "Name             Distance         \n";
+                    temp.append("\n======================================================================\n");
+                    temp.append("Điểm Trung Tâm: " + key.toString() +"\n");
+                    temp.append("MSSV             KHOẢNG CÁCH TỚI TT         \n");
+                    double avenger = 0;
+                    for (int v = 0; v < value.size(); v++) { // tong khoang cach cua tung cum toi tam cua no
+                        double currentDistance = distance.calculate(value.get(v).getFeatures(), key.getCoordinates());
+                        avenger += currentDistance;
+                        temp.append(value.get(v).getDescription() + "     ");
+                        temp.append(currentDistance + "     \n");
+                    }
+                    avg[0] += (avenger/value.size());
+                });
+                if (avgMin > (avg[0]/k)) {
+                    double sse = Errors.sse(clusters, distance);
+                    sumOfSquaredErrors.add(sse);
+                    avgMin = avg[0]/k;
+                    temp.append("TRUNG BÌNH CỦA TỪNG PHÂN LỚP: " + avgMin);
+                    File path = new File("");
+                    FileWriter csvWriter = new FileWriter(  path.getAbsoluteFile() + "/Result/Cluster" + finalK +".csv");
+                    try {
+                        csvWriter.append(temp);
+                        csvWriter.flush();
+                        csvWriter.close();
+                    } catch (IOException e) {
+                        System.out.println(e);
+                    }
+                }
+            }
+//            Map<String, Object> json = convertToD3CompatibleMap(clusters);
+//            System.out.println(mapper.writeValueAsString(json));
+        }
     }
 
     private static Map<String, Object> convertToD3CompatibleMap(Map<Centroid, List<Record>> clusters) {
         Map<String, Object> json = new HashMap<>();
-        json.put("name", "Musicians");
+        json.put("name", "Student");
         List<Map<String, Object>> children = new ArrayList<>();
         clusters.forEach((key, value) -> {
             Map<String, Object> child = new HashMap<>();
             child.put("name", dominantGenre(sortedCentroid(key)));
             List<Map<String, String>> nested = new ArrayList<>();
-//            for (Record record : value) {
-//                nested.add(Collections.singletonMap("name", record.getDescription()));
-//            }
+            for (Record record : value) {
+                nested.add(Collections.singletonMap("name", record.getDescription()));
+            }
             child.put("children", nested);
 
             children.add(child);
@@ -115,12 +110,11 @@ public class LastFm {
     }
 
     private static List<Record> getDataset() throws IOException {
-        String pathToCsv = "/home/quochuy/Desktop/TAI_LIEU/ML&DM/student-performance-dataset/Student_Performance_Data_Wide_Version.csv";
         String row;
         int iLoop = -1;
         List<Record> records = new ArrayList<>();
-
-        BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
+        File path = new File("");
+        BufferedReader csvReader = new BufferedReader(new FileReader(path.getAbsolutePath() + "/Resourses/dataset.csv"));
         while ((row = csvReader.readLine()) != null) {
             iLoop++;
             if (iLoop % 8 != 0) continue;

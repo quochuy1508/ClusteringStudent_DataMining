@@ -37,28 +37,34 @@ public class KMeans {
         applyPreconditions(records, k, distance, maxIterations);
 
         List<Centroid> centroids = randomCentroids(records, k);
+
         Map<Centroid, List<Record>> clusters = new HashMap<>();
         Map<Centroid, List<Record>> lastState = new HashMap<>();
 
         // iterate for a pre-defined number of times
         for (int i = 0; i < maxIterations; i++) {
             boolean isLastIteration = i == maxIterations - 1;
-
+//            if (centroids.size() != k) {
+//                System.out.println("Controid length: " + centroids.size());
+//            }
             // in each iteration we should find the nearest centroid for each record
             for (Record record : records) {
                 Centroid centroid = nearestCentroid(record, centroids, distance);
                 assignToCluster(clusters, record, centroid);
             }
-
-            // if the assignment does not change, then the algorithm terminates
+            if (clusters.size() != k) {
+                return clusters;
+            }
+                // if the assignment does not change, then the algorithm terminates
             boolean shouldTerminate = isLastIteration || clusters.equals(lastState);
             lastState = clusters;
+
             if (shouldTerminate) {
                 break;
             }
 
             // at the end of each iteration we should relocate the centroids
-            centroids = relocateCentroids(clusters);
+            centroids = relocateCentroids(clusters); // done
             clusters = new HashMap<>();
         }
 
@@ -161,7 +167,6 @@ public class KMeans {
                 nearest = centroid;
             }
         }
-
         return nearest;
     }
 
