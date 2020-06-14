@@ -22,9 +22,8 @@ public class EblowChart {
                 DefaultXYDataset df = new DefaultXYDataset();
                 df.addSeries("series1", data);
                 XYDataset ds = df;
-                JFreeChart chart = ChartFactory.createXYLineChart("Elbow Chart",
-                        "x", "y", ds, PlotOrientation.VERTICAL, true, true,
-                        false);
+                JFreeChart chart = ChartFactory.createXYLineChart("Elbow Chart", "k", "Sum of squared errors", ds,
+                        PlotOrientation.VERTICAL, true, true, false);
 
                 ChartPanel cp = new ChartPanel(chart);
 
