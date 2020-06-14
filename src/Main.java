@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         List<Record> records = getDataset();;
         Distance distance = new EuclideanDistance();
-        int n = 1;
+        int n = 50;
         int numCluster = 20;
         List<Double> sumOfSquaredErrors = new ArrayList<>();
         for (int k = 1; k <= numCluster; k++) {
