@@ -1,9 +1,6 @@
 import java.util.List;
 import java.util.Map;
 
-/**
- * Encapsulates methods to calculates errors between centroid and the cluster members.
- */
 public class Errors {
 
     public static double sse(Map<Centroid, List<Record>> clustered, Distance distance) {

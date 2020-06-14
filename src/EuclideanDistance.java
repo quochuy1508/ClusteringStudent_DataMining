@@ -1,8 +1,5 @@
 import java.util.Map;
 
-/**
- * Calculates the distance between two items using the Euclidean formula.
- */
 public class EuclideanDistance implements Distance {
 
     @Override

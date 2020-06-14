@@ -1,21 +1,9 @@
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Encapsulates all feature values for a few attributes. Optionally each record
- * can be described with the {@link #description} field.
- */
 public class Record {
-
-    /**
-     * The record description. For example, this can be the artist name for the famous musician
-     * example.
-     */
     private final String description;
 
-    /**
-     * Encapsulates all attributes and their corresponding values, i.e. features.
-     */
     private final Map<String, Double> features;
 
     public Record(String description, Map<String, Double> features) {
